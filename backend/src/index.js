@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { pool } = require('./config/db');
+const { mountAiAssistant } = require('./ai');
 const {
   accounts,
   invoices,
@@ -173,6 +174,8 @@ app.get('/api/reports/trial-balance', async (req, res) => {
 app.get('/api/reports/accounts', async (req, res) => {
   return res.json(getAccountSummary());
 });
+
+mountAiAssistant(app, { port: PORT });
 
 app.listen(PORT, () => {
   console.log(`Hohub ERP API listening on http://localhost:${PORT}`);

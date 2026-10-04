@@ -1,116 +1,141 @@
-import { useEffect, useState } from 'react';
-
-const api = async (endpoint) => {
-  const response = await fetch(`/api${endpoint}`);
-  if (!response.ok) throw new Error('Request failed');
-  return response.json();
-};
-
-export default function App() {
-  const [summary, setSummary] = useState(null);
-  const [accounts, setAccounts] = useState([]);
-  const [invoices, setInvoices] = useState([]);
-  const [budgets, setBudgets] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [summaryData, accountsData, invoiceData, budgetData] = await Promise.all([
-          api('/reports/summary'),
-          api('/accounts'),
-          api('/invoices'),
-          api('/budgets')
-        ]);
-
-        setSummary(summaryData);
-        setAccounts(accountsData);
-        setInvoices(invoiceData);
-        setBudgets(budgetData);
-      } catch (error) {
-        console.error('Failed to load ERP data', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
-  }, []);
-
-  if (loading) {
-    return <div className="app">Loading Hohub ERP data...</div>;
-  }
-
-  return (
-    <div className="app-shell">
-      <header className="topbar">
-        <div>
-          <p className="eyebrow">ERP / Finance & Accounting</p>
-          <h1>Hohub</h1>
-        </div>
-      </header>
-
-      <section className="stats-grid">
-        <StatCard label="Total Assets" value={`$${(summary?.total_assets || 0).toLocaleString()}`} />
-        <StatCard label="Total Liabilities" value={`$${(summary?.total_liabilities || 0).toLocaleString()}`} />
-        <StatCard label="Net Income" value={`$${(summary?.net_income || 0).toLocaleString()}`} />
-        <StatCard label="Cash Balance" value={`$${(summary?.cash_balance || 0).toLocaleString()}`} />
-      </section>
-
-      <section className="panel-grid">
-        <div className="panel">
-          <h2>Chart of Accounts</h2>
-          <ul className="line-list">
-            {accounts.slice(0, 6).map((account) => (
-              <li key={account.id}>
-                <span>{account.account_code}</span>
-                <strong>{account.account_name}</strong>
-                <em>{account.account_type}</em>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="panel">
-          <h2>Recent Invoices</h2>
-          <ul className="line-list">
-            {invoices.slice(0, 5).map((invoice) => (
-              <li key={invoice.id}>
-                <span>{invoice.invoice_no}</span>
-                <strong>{invoice.status}</strong>
-                <em>${Number(invoice.total_amount || 0).toLocaleString()}</em>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section className="panel-grid">
-        <div className="panel wide">
-          <h2>Budgets</h2>
-          <ul className="budget-list">
-            {budgets.map((budget) => (
-              <li key={budget.id}>
-                <div>
-                  <strong>{budget.budget_name}</strong>
-                  <small>{budget.budget_code}</small>
-                </div>
-                <span>{budget.status}</span>
-                <em>${Number(budget.total_budget || 0).toLocaleString()}</em>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-    </div>
-  );
+* {
+  box-sizing: border-box;
 }
 
-function StatCard({ label, value }) {
-  return (
-    <div className="stat-card">
-      <p>{label}</p>
-      <h3>{value}</h3>
-    </div>
-  );
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f3f6fb;
+  color: #14213d;
+}
+
+button, input, select {
+  font: inherit;
+}
+
+.app-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+}
+
+.topbar {
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #5c6f8d;
+  font-size: 12px;
+  margin: 0 0 8px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2.2rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.stat-card,
+.panel {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(16, 24, 40, 0.06);
+  border: 1px solid #e8edf8;
+}
+
+.stat-card {
+  padding: 18px 20px;
+}
+
+.stat-card p {
+  margin: 0 0 12px;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.stat-card h3 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.panel {
+  padding: 20px;
+}
+
+.panel h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 1.2rem;
+}
+
+.line-list,
+.budget-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.line-list li,
+.budget-list li {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #edf2ff;
+}
+
+.line-list li:last-child,
+.budget-list li:last-child {
+  border-bottom: none;
+}
+
+.line-list span,
+.budget-list small {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.line-list strong,
+.budget-list strong {
+  font-size: 0.96rem;
+}
+
+.line-list em,
+.budget-list em {
+  font-style: normal;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.budget-list li {
+  grid-template-columns: 1fr auto auto;
+}
+
+.wide {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .line-list li,
+  .budget-list li {
+    grid-template-columns: 1fr;
+  }
 }

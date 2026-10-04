@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import AiAssistant from './AiAssistant.jsx';
 
 const api = async (endpoint) => {
   const response = await fetch(`/api${endpoint}`);
@@ -101,6 +102,10 @@ export default function App() {
             ))}
           </ul>
         </div>
+      </section>
+
+      <section className="panel-grid">
+        <AiAssistant />
       </section>
     </div>
   );

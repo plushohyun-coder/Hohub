@@ -17,6 +17,6 @@
     "nodemon": "^3.1.14"
   },
   "optionalDependencies": {
-    "plus-erp-ai-client": "github:plushohyun-coder/plus-erp-ai-client#claude/plus-erp-ai-client-integration-c2yyiw"
+    "plus-erp-ai-client": "github:plushohyun-coder/plus-erp-ai-client#main"
   }
 }

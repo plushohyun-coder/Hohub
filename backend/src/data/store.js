@@ -61,6 +61,7 @@ const budgets = [
 const trialBalance = [
   { account_code: '1000', account_name: 'Cash and Cash Equivalents', account_type: 'Asset', debit_balance: 250000, credit_balance: 0 },
   { account_code: '1100', account_name: 'Accounts Receivable', account_type: 'Asset', debit_balance: 120000, credit_balance: 0 },
+  { account_code: '1200', account_name: 'Inventory', account_type: 'Asset', debit_balance: 202000, credit_balance: 0 },
   { account_code: '2000', account_name: 'Accounts Payable', account_type: 'Liability', debit_balance: 0, credit_balance: 87000 },
   { account_code: '3000', account_name: 'Owner Equity', account_type: 'Equity', debit_balance: 0, credit_balance: 250000 },
   { account_code: '4000', account_name: 'Sales Revenue', account_type: 'Revenue', debit_balance: 0, credit_balance: 385000 },
@@ -68,7 +69,7 @@ const trialBalance = [
 ];
 
 const summaryReport = () => ({
-  total_assets: 370000,
+  total_assets: 572000,
   total_liabilities: 87000,
   total_equity: 250000,
   net_income: 235000,

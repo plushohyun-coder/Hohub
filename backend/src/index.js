@@ -1,6 +1,12 @@
+const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+
+// Load .env before ./config/db reads DATABASE_URL.
+dotenv.config();
+
 const { pool } = require('./config/db');
 const { mountAiAssistant } = require('./ai');
 const {
@@ -14,8 +20,6 @@ const {
   createBudget,
   getAccountSummary
 } = require('./data/store');
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -143,8 +147,57 @@ app.post('/api/budgets', async (req, res) => {
 });
 
 app.get('/api/reports/summary', async (req, res) => {
-  const data = summaryReport();
-  return res.json(data);
+  try {
+    if (pool) {
+      // Balances come from posted journal entries; cash is the 10xx account range.
+      const balances = await pool.query(`
+        SELECT
+          COALESCE(SUM(CASE WHEN ca.account_type = 'Asset' THEN jel.debit_amount - jel.credit_amount END), 0) AS total_assets,
+          COALESCE(SUM(CASE WHEN ca.account_type = 'Liability' THEN jel.credit_amount - jel.debit_amount END), 0) AS total_liabilities,
+          COALESCE(SUM(CASE WHEN ca.account_type = 'Equity' THEN jel.credit_amount - jel.debit_amount END), 0) AS total_equity,
+          COALESCE(SUM(CASE WHEN ca.account_type = 'Revenue' THEN jel.credit_amount - jel.debit_amount END), 0) AS revenue,
+          COALESCE(SUM(CASE WHEN ca.account_type = 'Expense' THEN jel.debit_amount - jel.credit_amount END), 0) AS expenses,
+          COALESCE(SUM(CASE WHEN ca.account_type = 'Expense' AND je.entry_date >= date_trunc('year', CURRENT_DATE)
+                            THEN jel.debit_amount - jel.credit_amount END), 0) AS expenses_ytd,
+          COALESCE(SUM(CASE WHEN ca.account_code LIKE '10%' THEN jel.debit_amount - jel.credit_amount END), 0) AS cash_balance
+        FROM journal_entry_lines jel
+        JOIN journal_entries je ON je.id = jel.journal_entry_id AND je.status = 'POSTED'
+        JOIN chart_of_accounts ca ON ca.id = jel.account_id
+      `);
+      const openItems = await pool.query(`
+        SELECT
+          COALESCE(SUM(CASE WHEN invoice_type = 'CUSTOMER' THEN balance_due END), 0) AS outstanding_ar,
+          COALESCE(SUM(CASE WHEN invoice_type = 'VENDOR' THEN balance_due END), 0) AS outstanding_ap
+        FROM invoices
+        WHERE status IN ('POSTED', 'PARTIALLY_PAID')
+      `);
+      const budget = await pool.query(`
+        SELECT COALESCE(SUM(total_budget), 0) AS total_budget
+        FROM budgets
+        WHERE status = 'ACTIVE' AND fiscal_year = to_char(CURRENT_DATE, 'YYYY')
+      `);
+
+      const b = balances.rows[0];
+      const toNumber = (value) => Number(value || 0);
+      const totalBudget = toNumber(budget.rows[0].total_budget);
+
+      return res.json({
+        total_assets: toNumber(b.total_assets),
+        total_liabilities: toNumber(b.total_liabilities),
+        total_equity: toNumber(b.total_equity),
+        net_income: toNumber(b.revenue) - toNumber(b.expenses),
+        cash_balance: toNumber(b.cash_balance),
+        outstanding_ar: toNumber(openItems.rows[0].outstanding_ar),
+        outstanding_ap: toNumber(openItems.rows[0].outstanding_ap),
+        monthly_budget_used: totalBudget > 0 ? Math.round((toNumber(b.expenses_ytd) / totalBudget) * 1000) / 10 : null
+      });
+    }
+
+    return res.json(summaryReport());
+  } catch (error) {
+    console.error('Error building summary report:', error.message);
+    return res.status(500).json({ message: 'Failed to build summary report' });
+  }
 });
 
 app.get('/api/reports/trial-balance', async (req, res) => {
@@ -176,6 +229,13 @@ app.get('/api/reports/accounts', async (req, res) => {
 });
 
 mountAiAssistant(app, { port: PORT });
+
+// Serve the built frontend (frontend/dist) when present, e.g. in the Docker image.
+const staticDir = process.env.STATIC_DIR || path.join(__dirname, '../../frontend/dist');
+if (fs.existsSync(path.join(staticDir, 'index.html'))) {
+  app.use(express.static(staticDir));
+  app.get(/^(?!\/api(\/|$)).*/, (req, res) => res.sendFile(path.join(staticDir, 'index.html')));
+}
 
 app.listen(PORT, () => {
   console.log(`Hohub ERP API listening on http://localhost:${PORT}`);

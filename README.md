@@ -17,3 +17,7 @@ npm start
 - `POST /api/ai/chat` - `{ "message": "...", "history": [...] }`
 
 Without `ANTHROPIC_API_KEY`, or if the package can't be installed, the ERP runs normally and the panel shows as disabled.
+
+## NAS deployment (Docker)
+
+To run Hohub with the AI assistant on a NAS against its PostgreSQL database, see [docs/NAS-DEPLOY.md](docs/NAS-DEPLOY.md) (Korean). In short: `cp .env.docker.example .env`, fill it in, then `docker compose up -d --build`; the app is served on port 5080.

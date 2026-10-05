@@ -1,0 +1,19 @@
+# Hohub ERP + AI assistant for a NAS (Synology Container Manager, QNAP Container Station, plain Docker).
+# Setup: cp .env.docker.example .env, fill it in, then: docker compose up -d --build
+services:
+  hohub:
+    build:
+      context: .
+      secrets:
+        - github_token
+    image: hohub-erp:latest
+    container_name: hohub-erp
+    restart: unless-stopped
+    # Host networking lets the container reach a PostgreSQL that listens on the NAS itself
+    # (DATABASE_URL=postgres://...@127.0.0.1:5432/...). Open the app at http://<NAS-IP>:${PORT}.
+    network_mode: host
+    env_file: .env
+
+secrets:
+  github_token:
+    environment: GITHUB_TOKEN

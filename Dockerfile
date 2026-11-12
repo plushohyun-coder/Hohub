@@ -39,6 +39,7 @@ WORKDIR /app/backend
 COPY --from=deps /app/backend/node_modules ./node_modules
 COPY backend/package.json ./
 COPY backend/src ./src
+COPY backend/scripts ./scripts
 COPY --from=frontend /app/frontend/dist /app/frontend/dist
 
 ENV NODE_ENV=production \

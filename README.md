@@ -33,6 +33,14 @@ cp .env.example .env        # set DATABASE_URL and ANTHROPIC_API_KEY
 npm start
 ```
 
+The package is pinned to a commit in `backend/package.json` (`github:plushohyun-coder/plus-erp-ai-client#<sha>`), so a
+build never picks up unreviewed changes from its `main` branch. To update: review the new commits in plus-erp-ai-client,
+then replace the SHA with the reviewed commit's full SHA and rebuild.
+
+Data API create requests (`POST /api/accounts|invoices|budgets`) are validated with zod: unknown fields, wrong types,
+out-of-range amounts (DECIMAL(15,2), at most 2 decimals), impossible dates and unknown status values are rejected with
+400 `VALIDATION_FAILED` (naming the fields, never echoing values); duplicate codes give 409, unknown customer/vendor ids 400.
+
 - `GET /api/ai/status` - whether the assistant is enabled
 - `POST /api/ai/chat` - `{ "message": "...", "history": [...] }`
 

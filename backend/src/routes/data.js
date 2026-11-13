@@ -10,6 +10,19 @@ const {
   createBudget,
   getAccountSummary
 } = require('../data/store');
+const { HttpStatus, ErrorCode, PgError } = require('../constants');
+const { accountSchema, invoiceSchema, budgetSchema, validateBody } = require('../validation/dataRequests');
+
+// A duplicate code/number or a missing customer/vendor is the client's mistake, not a server error.
+const clientError = (error, res) => {
+  if (error.code === PgError.UNIQUE_VIOLATION) {
+    return res.status(HttpStatus.CONFLICT).json({ code: ErrorCode.DUPLICATE, message: 'A record with this code or number already exists' });
+  }
+  if (error.code === PgError.FOREIGN_KEY_VIOLATION) {
+    return res.status(HttpStatus.BAD_REQUEST).json({ code: ErrorCode.UNKNOWN_REFERENCE, message: 'Referenced customer or vendor does not exist' });
+  }
+  return null;
+};
 
 // Finance data API (/api/accounts, /api/invoices, ...). Uses PostgreSQL when a pool is given,
 // otherwise the in-memory sample data. With readOnly, the POST routes are left out.
@@ -32,7 +45,7 @@ const createDataRouter = ({ pool, readOnly = false }) => {
     }
   });
 
-  post('/accounts', async (req, res) => {
+  post('/accounts', validateBody(accountSchema), async (req, res) => {
     try {
       const record = req.body;
 
@@ -48,6 +61,7 @@ const createDataRouter = ({ pool, readOnly = false }) => {
       const newAccount = createAccount(record);
       return res.status(201).json(newAccount);
     } catch (error) {
+      if (clientError(error, res)) return undefined;
       console.error('Error creating account:', error.message);
       return res.status(500).json({ message: 'Failed to create account' });
     }
@@ -73,7 +87,7 @@ const createDataRouter = ({ pool, readOnly = false }) => {
     }
   });
 
-  post('/invoices', async (req, res) => {
+  post('/invoices', validateBody(invoiceSchema), async (req, res) => {
     try {
       const payload = req.body;
 
@@ -89,6 +103,7 @@ const createDataRouter = ({ pool, readOnly = false }) => {
       const newInvoice = createInvoice(payload);
       return res.status(201).json(newInvoice);
     } catch (error) {
+      if (clientError(error, res)) return undefined;
       console.error('Error creating invoice:', error.message);
       return res.status(500).json({ message: 'Failed to create invoice' });
     }
@@ -108,7 +123,7 @@ const createDataRouter = ({ pool, readOnly = false }) => {
     }
   });
 
-  post('/budgets', async (req, res) => {
+  post('/budgets', validateBody(budgetSchema), async (req, res) => {
     try {
       const payload = req.body;
 
@@ -124,6 +139,7 @@ const createDataRouter = ({ pool, readOnly = false }) => {
       const newBudget = createBudget(payload);
       return res.status(201).json(newBudget);
     } catch (error) {
+      if (clientError(error, res)) return undefined;
       console.error('Error creating budget:', error.message);
       return res.status(500).json({ message: 'Failed to create budget' });
     }

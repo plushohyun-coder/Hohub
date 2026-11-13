@@ -17,6 +17,7 @@ const HttpStatus = Object.freeze({
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
   NOT_FOUND: 404,
+  CONFLICT: 409,
   MISDIRECTED: 421,
   TOO_MANY_REQUESTS: 429,
   INTERNAL_ERROR: 500,
@@ -25,6 +26,9 @@ const HttpStatus = Object.freeze({
 
 const ErrorCode = Object.freeze({
   BAD_REQUEST: 'BAD_REQUEST',
+  VALIDATION_FAILED: 'VALIDATION_FAILED',
+  DUPLICATE: 'DUPLICATE',
+  UNKNOWN_REFERENCE: 'UNKNOWN_REFERENCE',
   LOGIN_FAILED: 'LOGIN_FAILED',
   UNAUTHORIZED: 'UNAUTHORIZED',
   FORBIDDEN: 'FORBIDDEN',
@@ -34,4 +38,7 @@ const ErrorCode = Object.freeze({
   LOGIN_UNAVAILABLE: 'LOGIN_UNAVAILABLE'
 });
 
-module.exports = { Role, WRITE_ROLES, HttpStatus, ErrorCode };
+// PostgreSQL error codes the data API turns into client errors.
+const PgError = Object.freeze({ UNIQUE_VIOLATION: '23505', FOREIGN_KEY_VIOLATION: '23503' });
+
+module.exports = { Role, WRITE_ROLES, HttpStatus, ErrorCode, PgError };

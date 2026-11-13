@@ -84,6 +84,25 @@ test('login', { skip: !DATABASE_URL && 'TEST_DATABASE_URL not set' }, async (t) 
     assert.strictEqual((await call('POST', '/api/accounts', { cookie: accountant, body })).status, 201);
   });
 
+  await t.test('created data is validated; duplicates and unknown references are client errors', async () => {
+    const admin = cookieOf(await login('admin'));
+    const bad = await call('POST', '/api/budgets', { cookie: admin, body: { budget_name: 'x', budget_code: 'B1', fiscal_year: '2027', start_date: '2027-05-01', end_date: '2027-01-01', is_active: true } });
+    assert.strictEqual(bad.status, 400);
+    assert.strictEqual((await bad.json()).code, 'VALIDATION_FAILED');
+
+    const budget = { budget_name: 'Ops 2027', budget_code: 'OPS-2027', fiscal_year: '2027', start_date: '2027-01-01', end_date: '2027-12-31', total_budget: 1000.25 };
+    assert.strictEqual((await call('POST', '/api/budgets', { cookie: admin, body: budget })).status, 201);
+    const again = await call('POST', '/api/budgets', { cookie: admin, body: budget });
+    assert.strictEqual(again.status, 409);
+    assert.strictEqual((await again.json()).code, 'DUPLICATE');
+
+    const invoice = { invoice_no: 'INV-X1', invoice_date: '2027-01-05', due_date: '2027-02-05', customer_id: 999999, total_amount: 10 };
+    const missing = await call('POST', '/api/invoices', { cookie: admin, body: invoice });
+    assert.strictEqual(missing.status, 400);
+    assert.strictEqual((await missing.json()).code, 'UNKNOWN_REFERENCE');
+    await pool.query("UPDATE users SET failed_login_count = 0 WHERE username = 'admin'");
+  });
+
   await t.test('wrong password and unknown user get the same answer', async () => {
     const wrong = await login('viewer', 'Wrong-Password-1');
     const unknown = await login('nobody', 'Wrong-Password-1');

@@ -57,6 +57,7 @@ const createInternalApp = ({ pool, port = config.internalApi.port }) => {
   app.disable('x-powered-by');
   app.use(requireLocalHost(port));
   app.use((req, res, next) => (req.method === 'GET' ? next() : notFound(req, res)));
+  app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
   app.use('/api', createDataRouter({ pool, readOnly: true }));
   app.use(notFound);
   app.use(errorHandler);

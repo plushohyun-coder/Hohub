@@ -5,18 +5,21 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "test": "node --test",
+    "user": "node scripts/user.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",
+    "argon2": "^0.41.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "pg": "^8.12.0"
+    "pg": "^8.12.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
   },
   "optionalDependencies": {
-    "plus-erp-ai-client": "github:plushohyun-coder/plus-erp-ai-client#main"
+    "plus-erp-ai-client": "github:plushohyun-coder/plus-erp-ai-client#c7e36eb5a6861128c621d07354c17bb453a88bc5"
   }
 }

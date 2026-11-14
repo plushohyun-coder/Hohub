@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 const SUGGESTIONS = ['현재 현금 잔액은?', '미결제 송장 현황 알려줘', '2026년 예산 사용률은?'];
 
-export default function AiAssistant() {
+export default function AiAssistant({ onSessionEnded }) {
   const [status, setStatus] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -35,6 +35,10 @@ export default function AiAssistant() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, history })
       });
+      if (response.status === 401) {
+        onSessionEnded?.();
+        return;
+      }
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.message || 'AI 요청이 실패했습니다.');
       setMessages((current) => [

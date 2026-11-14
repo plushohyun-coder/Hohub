@@ -3,8 +3,8 @@
 # ---- Build the React frontend ----
 FROM node:22-alpine AS frontend
 WORKDIR /app/frontend
-COPY frontend/package.json ./
-RUN npm install --no-audit --no-fund
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --no-audit --no-fund
 COPY frontend/ ./
 RUN npm run build
 
@@ -39,6 +39,7 @@ WORKDIR /app/backend
 COPY --from=deps /app/backend/node_modules ./node_modules
 COPY backend/package.json ./
 COPY backend/src ./src
+COPY backend/scripts ./scripts
 COPY --from=frontend /app/frontend/dist /app/frontend/dist
 
 ENV NODE_ENV=production \

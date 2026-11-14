@@ -258,3 +258,73 @@ h1 {
   background: #9fb3d9;
   cursor: not-allowed;
 }
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.user-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #5c6f8d;
+  font-size: 0.9rem;
+}
+
+.user-box button,
+.login-panel button {
+  border: 1px solid #c7d2fe;
+  background: #fff;
+  color: #1d4ed8;
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.login-panel {
+  width: 100%;
+  max-width: 360px;
+  display: grid;
+  gap: 14px;
+}
+
+.login-panel label {
+  display: grid;
+  gap: 6px;
+  color: #5c6f8d;
+  font-size: 0.85rem;
+}
+
+.login-panel input {
+  border: 1px solid #d5ddef;
+  border-radius: 8px;
+  padding: 9px 11px;
+}
+
+.login-panel button[type='submit'] {
+  background: #1d4ed8;
+  color: #fff;
+  border: none;
+  padding: 10px;
+}
+
+.login-panel button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.login-error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
